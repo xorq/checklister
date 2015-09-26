@@ -18,22 +18,24 @@
 	{item:'Phone', priority:2}
 	];
 
-
-
-
-
-
-
 	var listMaker = function(data){
-		return _.map(data, function(a,i){
+		return _.map(data, function(a,i) {
 			return '\
 			<li class="item ui-first-child ui-last-child" id=' + i + '>\
 				<a>' + a.item + '</a>\
 			</li>';
 		})
-	}
+	};
+
+	var alternateCSS = function(item, A, B){
+		return function(){
+			$(this).css(item, $(this).css(item) == A ? B : A) 
+		}
+	};
+
 	var eventMaker = function(){
 		$('.ui-listview li > a')
+		.on('click', alternateCSS('background-color', 'rgb(55, 55, 55)', 'rgb(0, 128, 0)'))//function() {$(this).css('background-color',$(this).css('background-color') == 'rgb(0, 128, 0)' ? 'rgb(55, 55, 55)' : 'rgb(0, 128, 0)')})
 		.on('touchstart', function(e) {
 			$('.ui-listview li > a.open').css('left', '0px').removeClass('open') // close em all
 			$(e.currentTarget).addClass('open')
@@ -69,8 +71,6 @@
 
 
 		}
-	
-
 
 	//$('.list').enhanceWithin()
 	$('.list').append(listMaker(data));
