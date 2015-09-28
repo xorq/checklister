@@ -46,7 +46,11 @@ var DataManager = function(){
 		this.sortData();
 	};
 	this.importData = function(){
-		this.data = $.parseJSON(window.localStorage.items)
+		try{
+			this.data = $.parseJSON(window.localStorage.items)
+		} catch(err){
+			
+		}
 	};
 	this.removeItem = function(catId, id){
 		this.data[catId].listData.splice(id,1)
@@ -185,6 +189,7 @@ var listMakerCategories = function(data){
 };
 
 var categoryEvents = function(dataMaster) {
+
 	$('.ui-btn').off()
 	$('.delete-btn').on('click', function(e){
 		dataMaster.removeCategory(e.toElement.id)
@@ -228,7 +233,7 @@ var categoryEvents = function(dataMaster) {
 	});
 }
 
-
+/*
 var data = [{listName:'badminton',
 listData:[
 	{item:'Rackets',priority:0},
@@ -250,9 +255,90 @@ listData:[
 ]},{listName:'aze'}]
 
 window.localStorage.items = JSON.stringify(data)
-
-
-
+*/
 // Initialize the Data into a new object
-renderCategories();
+
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+var app = {
+	// Application Constructor
+	initialize: function() {
+		console.log(!window.localStorage.items)
+		if(!window.localStorage.items){
+
+			var data = [{listName:'badminton',
+			listData:[
+				{item:'Rackets',priority:0},
+				{item:'Plastic Bags',priority:1},
+				{item:'Shoes',priority:0},
+				{item:'Socks',priority:0},
+				{item:'Small Towel',priority:1},
+
+				{item:'Big Towel', priority:2},
+				{item:'Powder', priority:3},
+				{item:'Clean short', priority:3},
+				{item:'Soap', priority:3},
+				{item:'Shampoo', priority:3},
+
+				{item:'Money', priority:0},
+				{item:'Wallet', priority:0},
+				{item:'Room Keys', priority:0},
+				{item:'Phone', priority:0}
+			]}]
+			window.localStorage.items = JSON.stringify(data)
+		}
+		renderCategories();
+		this.bindEvents();
+
+	},
+	// Bind Event Listeners
+	//
+	// Bind any events that are required on startup. Common events are:
+	// 'load', 'deviceready', 'offline', and 'online'.
+	bindEvents: function() {
+		document.addEventListener('deviceready', this.onDeviceReady, false);
+	},
+	// deviceready Event Handler
+	//
+	// The scope of 'this' is the event. In order to call the 'receivedEvent'
+	// function, we must explicitly call 'app.receivedEvent(...);'
+	onDeviceReady: function() {
+		
+		app.receivedEvent('deviceready');
+	},
+	// Update DOM on a Received Event
+	receivedEvent: function(id) {
+		var parentElement = document.getElementById(id);
+		var listeningElement = parentElement.querySelector('.listening');
+		var receivedElement = parentElement.querySelector('.received');
+
+		listeningElement.setAttribute('style', 'display:none;');
+		receivedElement.setAttribute('style', 'display:block;');
+
+		console.log('Received Event: ' + id);
+	}
+};
+
+
+
+
+app.initialize();
+
+
 	//eventMaker();
