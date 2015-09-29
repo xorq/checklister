@@ -118,7 +118,7 @@ var renderList = function(i){
 
 	var whenReordered = function(e) {
 		e.target.parentNode.insertBefore(e.target, e.detail.insertBefore);
-		dataMaster.itemList(i, rewriteItemList())
+		dataMaster.itemList(i, rewriteItemList(dataMaster.getData(i).listData))
 		renderList(i);
 	};
 
@@ -131,9 +131,9 @@ var renderList = function(i){
 // VIEWS' HELPERS
 	// ITEMS
 
-var rewriteItemList = function(){
+var rewriteItemList = function(data){
 	return _.map($('ul > li > .item'), function(a, i){
-		return {item:a.firstChild.data, priority:i, done:false}
+		return {item:a.firstChild.data, priority:i, done: _.find(data, function(it, ind){ return a.firstChild.data.trim() == it.item.trim()}).done }
 	})
 }
 
