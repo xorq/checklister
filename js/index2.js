@@ -49,8 +49,8 @@ var DataManager = function(){
 		var prompt = window.prompt('Item\'s name? You can add multiple items by separating with commas')
 		if (!prompt){return}
 		var prompt = prompt.split(',')
-		_.each(prompt, function(a){
-			master.data[cat].listData.push({item:a, priority:0, done:false})
+		_.each(prompt, function(a, i){
+			master.data[cat].listData.push({item:a, priority:i, done:false})
 		})
 		this.sortData();
 		this.submitData();
@@ -146,6 +146,7 @@ var listMakerItems = function(data){
 	}
 	var range = priority(data, _.max) - priority(data, _.min)
 	var colorFunction = function(data){
+		console.log(data)
 		var range = priority(data, _.max) - priority(data, _.min)
 		return function(itemPriority) {
 			return Math.floor(((itemPriority - priority(data, _.min)) / range) * 100) || 0
