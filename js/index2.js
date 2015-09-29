@@ -188,13 +188,16 @@ var listMakerItems = function(data){
 	}
 	var range = priority(data, _.max) - priority(data, _.min)
 	var colorFunction = function(data){
-		var range = priority(data, _.max) - priority(data, _.min)
+		/*var range = priority(data, _.max) - priority(data, _.min)
 		return function(itemPriority) {
 			return Math.floor(((itemPriority - priority(data, _.min)) / range) * 100) || 0
+		}*/
+		return function(itemIndex) {
+			return Math.floor((itemIndex / data.length) * 100) || 0
 		}
 	}
 	var result = _.map(data, function(a,i) {
-		var coloration = !a.done ? 'rgb(0, 0, ' + colorFunction(data)(a.priority) + ')' : 'rgb(0, 128, 0)';
+		var coloration = !a.done ? 'rgb(0, 0, ' + colorFunction(data)(i) + ')' : 'rgb(0, 128, 0)';
 		return '<li id="' + i + '" class="ui-first-child ui-last-child">\
 					<div class="behind">\
 						<a id="' + i + '" class="ui-btn delete-btn pull-left">Delete</a>\
