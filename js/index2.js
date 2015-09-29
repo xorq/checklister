@@ -1,3 +1,9 @@
+// GENERAL HELPERS
+var removeEvents = function(id){
+	var old_element = document.getElementById(id);
+	var new_element = old_element.cloneNode(true);
+	old_element.parentNode.replaceChild(new_element, old_element);
+}
 
 // DATA
 
@@ -55,11 +61,21 @@ var DataManager = function(){
 	this.removeItem = function(catId, id){
 		this.data[catId].listData.splice(id,1)
 		this.submitData();
-	}
+	};
 	this.editPriority = function(cat, item){
 		var prompt = window.prompt('Priority Number?')
 		if (!prompt){return}
 		this.data[cat].listData[item].priority = prompt;
+		this.submitData();
+	};
+	this.itemList = function(cat, newList){
+		this.data[cat].listData = newList;
+		this.submitData();
+	}
+	this.achieved = function(cat, id){
+		console.log(cat)
+		console.log(this.data[cat].listData[id])
+		!this.data[cat].listData[id].done == true ;
 		this.submitData();
 	}
 }
@@ -79,19 +95,45 @@ var renderCategories = function(){
 };
 
 var renderList = function(i){
+	removeEvents('listView')
 	$('ui-btn').unbind()
 	$('.btn-back').css('display','block')
-	$('.list').html('');
+	$('.list').empty();
 	var dataMaster = new DataManager;
 	dataMaster.initialize();
 	var data = dataMaster.getData(i).listData;
 	$('.list').append(listMakerItems(data));
 	itemEvents(dataMaster, i);
 
+	var whenReordered = function(e) {
+		e.target.parentNode.insertBefore(e.target, e.detail.insertBefore);
+		dataMaster.itemList(i, rewriteItemList())
+		renderList(i);
+	};
+
+	var whenDeleted = function(e) {
+		//dataMaster.removeItem(i, )
+	}
+
+	var list = document.querySelector('ul');
+	new Slip(list);
+
+	list.addEventListener('slip:reorder', whenReordered, false);
+	/*list.addEventListener('slip:swipe', function(e) {
+		e.target.parentNode.removeChild(e.target);
+		dataMaster.itemList(i, rewriteItemList())
+
+	});*/
 }
 
 // VIEWS' HELPERS
 	// ITEMS
+
+var rewriteItemList = function(){
+	return _.map($('ul > li > a'), function(a, i){
+		return {item:a.firstChild.data, priority:i}
+	})
+}
 
 var listMakerItems = function(data){
 
@@ -107,13 +149,14 @@ var listMakerItems = function(data){
 		}
 	}
 	return _.map(data, function(a,i) {
-		return '<li class="ui-first-child ui-last-child">\
+		var coloration = !a.done ? 'rgb(0, 0, ' + colorFunction(data)(a.priority) + ')' : 'rgb(0, 128, 0)';
+		console.log(a)
+		return '<li id="' + i + '" class="ui-first-child ui-last-child">\
 					<div class="behind">\
 						<a id="' + i + '" class="ui-btn delete-btn pull-left">Delete</a>\
 						<a href="#" id="' + i + '" class="ui-btn priority new-btn edit-btn pull-right">Priority</a>\
 					</div>\
-					<a style="background-color:rgb(0, 0, ' + colorFunction(data)(a.priority) + ')" href="#sessio" data-role="button" data-transition="slide" class="ui-btn ui-icon-carat-r ui-btn-icon-right">' + a.item +'\
-						<h1 class="priority-index" style="position:absolute;z-index:200;top:6px;left:85%">' + a.priority + '</h1>\
+					<a id="' + i + '" style="background-color:' + coloration + '" href="#sessio" data-role="button" data-transition="slide" class="ui-btn ui-icon-carat-r ui-btn-icon-right">' + a.item +'\
 					</a>\
 					<div>\
 						\
@@ -146,7 +189,10 @@ var itemEvents = function(dataMaster, categoryID){
 	})
 	$('.btn-back').on('click', function(){renderCategories()});
 	$('.ui-listview li > a')
-	.one('click', alternateCSS('background-color', 'rgb(0, 128, 9)'))
+	.on('click', function(e){
+		dataMaster.achieved(categoryID, e.toElement.id)
+		renderList(categoryID)
+	}) //alternateCSS('background-color', 'rgb(0, 128, 9)'))
 	.on('touchstart', function(e) {
 		$('.ui-listview li > a.open').css('left', '0px').removeClass('open') // close em all
 		$(e.currentTarget).addClass('open')
@@ -154,11 +200,10 @@ var itemEvents = function(dataMaster, categoryID){
 	})
 	.on('touchmove', function(e) {
 		var change = e.originalEvent.targetTouches[0].pageX - x
-		change = Math.min(Math.max(-170, change), 170) // restrict to -100px left, 0px right
+		change = Math.min(Math.max(0, change), 170) *1.5
 		if (Math.abs(change) > 50) {
 			e.currentTarget.style.left = -(change > 0 ? 1 : -1) * 50 + change + 'px'
 		}
-		 // disable scroll once we hit 10px horizontal slide
 	})
 	.on('touchend', function(e) {
 		var left = parseInt(e.currentTarget.style.left)
@@ -206,31 +251,7 @@ var categoryEvents = function(dataMaster) {
 		dataMaster.editCategory(e.toElement.id);
 		renderCategories();
 	})
-	$('.ui-listview li > a')
-	.on('touchstart', function(e) {
-		$('.ui-listview li > a.open').css('left', '0px').removeClass('open') // close em all
-		$(e.currentTarget).addClass('open')
-		x = e.originalEvent.targetTouches[0].pageX // anchor point
-	})
-	.on('touchmove', function(e) {
-		var change = e.originalEvent.targetTouches[0].pageX - x
-		change = Math.min(Math.max(-170, change), 170)
-		if (Math.abs(change) > 50) {
-			e.currentTarget.style.left = -(change > 0 ? 1 : -1) * 50 + change + 'px'
-		}
-	})
-	.on('touchend', function(e) {
-		var left = parseInt(e.currentTarget.style.left)
-		var new_left;
-		if (left < -35) {
-			new_left = '-110px'
-		} else if (left > 35) {
-			new_left = '110px'
-		} else {
-			new_left = '0px'
-		}
-		$(e.currentTarget).animate({left: new_left}, 200)
-	});
+	
 }
 
 /*
@@ -279,27 +300,26 @@ window.localStorage.items = JSON.stringify(data)
 var app = {
 	// Application Constructor
 	initialize: function() {
-		console.log(!window.localStorage.items)
 		if(!window.localStorage.items){
 
 			var data = [{listName:'badminton',
 			listData:[
-				{item:'Rackets',priority:0},
-				{item:'Plastic Bags',priority:1},
-				{item:'Shoes',priority:0},
-				{item:'Socks',priority:0},
-				{item:'Small Towel',priority:1},
+				{item:'Rackets',priority:0, done:false},
+				{item:'Plastic Bags',priority:1, done:false},
+				{item:'Shoes',priority:0, done:false},
+				{item:'Socks',priority:0, done:false},
+				{item:'Small Towel',priority:1, done:false},
 
-				{item:'Big Towel', priority:2},
-				{item:'Powder', priority:3},
-				{item:'Clean short', priority:3},
-				{item:'Soap', priority:3},
-				{item:'Shampoo', priority:3},
+				{item:'Big Towel', priority:2, done:false},
+				{item:'Powder', priority:3, done:false},
+				{item:'Clean short', priority:3, done:false},
+				{item:'Soap', priority:3, done:false},
+				{item:'Shampoo', priority:3, done:false},
 
-				{item:'Money', priority:0},
-				{item:'Wallet', priority:0},
-				{item:'Room Keys', priority:0},
-				{item:'Phone', priority:0}
+				{item:'Money', priority:0, done:false},
+				{item:'Wallet', priority:0, done:false},
+				{item:'Room Keys', priority:0, done:false},
+				{item:'Phone', priority:0, done:false},
 			]}]
 			window.localStorage.items = JSON.stringify(data)
 		}
@@ -319,7 +339,6 @@ var app = {
 	// The scope of 'this' is the event. In order to call the 'receivedEvent'
 	// function, we must explicitly call 'app.receivedEvent(...);'
 	onDeviceReady: function() {
-		
 		app.receivedEvent('deviceready');
 	},
 	// Update DOM on a Received Event
