@@ -23,19 +23,25 @@
         <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
 
     </head>
+
     <body style='color:black'>
+
         <div class="app" style="width:100%;margin:0px;height:80%">
+
             <div id="deviceready" class="blink">
                 <p class="event listening">Connecting to Device</p>
                 <p class="event received">Device is Ready</p>
             </div>
             <div style='color:black' class='background' id='background'></div>
 
-            <div id="index" class="index" data-role="page" data-theme="b">
+            <div id="index" class="index" data-role="page" data-theme="b">        
+                <div class="dialog-holder2" data-theme="b"></div>
                 <div data-role='header' role='banner' class='ui-header ui-bar-inherit'>
                     <a class='btn-back ui-btn ui-icon-back ui-btn-icon-notext' data-role='button' style='padding:10px' role='button' style='display:block'></a>
-                    <a href='#sessionseditor?' id='session-editor' class='btn-add ui-btn-right ui-btn ui-icon-plus ui-btn-icon-notext' data-role='button' role='button' style='padding:10px;display:block'></a>
+                    <a class='btn-add ui-btn-right ui-btn ui-icon-plus ui-btn-icon-notext' data-role='button' role='button' style='padding:10px;display:block'></a>
                     <h4 class='app-name' style='margin-left:60px;margin-right:60px;font-size:22px; text-align:center'> Checklister </h4>
+                    
+                    <div class="dialog-holder"></div>
                 </div>
             <div style='left-margin:20px' class='result' id='result'>
                 <ul class="list ui-listview" id="listView" data-role="listview" data-type="horizontal">
@@ -49,5 +55,5 @@
             </div>
         </div>
     </body>
-            <script type="text/javascript" src="js/index2.js"></script>
+    <script type="text/javascript" src="js/index2.js"></script>
 </html>

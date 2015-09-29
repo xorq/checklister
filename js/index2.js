@@ -1,9 +1,48 @@
+var dialog = function(title, input, holder, buttons, callbacks, afterClose){
+	var action = '';
+	holder.html('<div id="popup-position"></div>')
+	var classNames = [];
+	var buttonsHTML = _.map(buttons, function(item, id) {
+		var className = item.replace(/\s+/g, '');
+		classNames[id] = className;
+		return "<a data-role='button' class='" + className + " ui-btn btn-ok' data-inline='true' style='color:default'>" + item + "</a>"
+	}).join('')
+
+	holder.append("\
+			<h2>" + title + "</h2>\
+			" + (input ? "<input type='text' class='inputBox' style='font-size:24px;color:white;background:black'></input>" : "" ) + "\
+			<div data-inline='true'>\
+				" + buttonsHTML + 
+			"</div>")
+	var pop = holder.popup();
+	pop.popup('open', {positionTo: 'h1'});	
+	holder.css('display','block');
+
+	holder.one({
+		popupafterclose: function(event, ui) { 
+			try{holder.empty(); } catch(err){console.log(err)}
+			holder.css('display','none')
+			afterClose(action);
+		}
+	})
+	_.each(buttons, function(item, id) {
+		$('.' + classNames[id]).one('click', function(){
+			callbacks[id]($('.inputBox').val() || undefined);
+			holder.popup('close')
+			$('.inputBox').val('');
+			$('.btn-ok').off('click')
+			action = classNames[id];
+		})
+	})
+	$('.inputBox').focus();
+};
+
 // GENERAL HELPERS
 var removeEvents = function(id){
 	var old_element = document.getElementById(id);
 	var new_element = old_element.cloneNode(true);
 	old_element.parentNode.replaceChild(new_element, old_element);
-}
+};
 
 // DATA
 
@@ -14,17 +53,18 @@ var DataManager = function(){
 		this.importData();
 		this.sortData();
 	};
-	this.sortData = function(){
+	this.sortCategories = function(){
 		this.data = _.sortBy(this.data, 'listName')
+	};
+	this.sortData = function(){
 		_.each(this.data, function(a){
 			a.listData = _.sortBy(_.sortBy(a.listData, 'item'), 'priority')
 		})
 	};
-	this.addCategory = function(){
-		var prompt = window.prompt('Name?');
-		if (!prompt){return}
-		this.data.push({ listName : prompt , listData : [] });
-		this.sortData();
+	this.addCategory = function(categoryName){
+		console.log('retz')
+		this.data.push({ listName : categoryName , listData : [] });
+		this.sortCategories();
 		this.submitData();
 	};
 	this.editCategory = function(id){
@@ -44,15 +84,15 @@ var DataManager = function(){
 	this.submitData = function(){
 		window.localStorage.items = JSON.stringify(this.getData())
 	};
-	this.addItem = function(cat) {
+	this.addItem = function(cat, items) {
 		var master = this;
-		var prompt = window.prompt('Item\'s name? You can add multiple items by separating with periods')
-		if (!prompt){return}
-		var prompt = prompt.split('.')
+		//var prompt = window.prompt('Item\'s name? You can add multiple items by separating with periods')
+		//if (!prompt){return}
+		var prompt = items.split('.')
 
 	
 		_.each(prompt, function(a, i){
-			master.data[cat].listData.push({item:a, priority:i, done:false})
+			master.data[cat].listData.push({item:a, priority:-1, done:false})
 		})
 		this.sortData();
 		this.submitData();
@@ -178,8 +218,14 @@ var itemEvents = function(dataMaster, categoryID){
 	};
 	$('.ui-btn').off()
 	$('.btn-add').on('click',function(){
-		dataMaster.addItem(categoryID);
-		renderList(categoryID);
+		var renderThis = function(){
+			dataMaster.sortData();
+			renderList(categoryID)
+		};
+		var save = function(items){
+			dataMaster.addItem(categoryID, items)
+		}
+		dialog("New item(s)'s Name ? (You can separate with periods)",true,$('.dialog-holder'), ['Ok', 'Cancel'],[save, function(){}], renderThis)
 	})
 	$('.priority.ui-btn').on('click', function(e){
 		dataMaster.editPriority(categoryID, e.toElement.id);
@@ -249,8 +295,10 @@ var categoryEvents = function(dataMaster) {
 		renderCategories();
 	})
 	$('.btn-add').on('click',function(){
-		dataMaster.addCategory();
-		renderCategories();
+		var save = function(value){ dataMaster.addCategory(value)};
+		dialog("What name for new Checklist ?",true,$('.dialog-holder'), ['Ok', 'Cancel'],[save, function(){}], renderCategories)
+		//dataMaster.addCategory();
+		//renderCategories();
 	})
 	$('.btn-category').on('click', function(e){
 		renderList(e.toElement.id);
@@ -360,7 +408,6 @@ var app = {
 		}
 		renderCategories();
 		this.bindEvents();
-
 	},
 	// Bind Event Listeners
 	//
