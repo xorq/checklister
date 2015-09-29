@@ -49,6 +49,8 @@ var DataManager = function(){
 		var prompt = window.prompt('Item\'s name? You can add multiple items by separating with periods')
 		if (!prompt){return}
 		var prompt = prompt.split('.')
+
+	
 		_.each(prompt, function(a, i){
 			master.data[cat].listData.push({item:a, priority:i, done:false})
 		})
