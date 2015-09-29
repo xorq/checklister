@@ -19,7 +19,6 @@ var DataManager = function(){
 		_.each(this.data, function(a){
 			a.listData = _.sortBy(_.sortBy(a.listData, 'item'), 'priority')
 		})
-		this.submitData();
 	};
 	this.addCategory = function(){
 		var prompt = window.prompt('Name?');
@@ -46,10 +45,15 @@ var DataManager = function(){
 		window.localStorage.items = JSON.stringify(this.getData())
 	};
 	this.addItem = function(cat) {
-		var prompt = window.prompt('Item\'s name?')
+		var master = this;
+		var prompt = window.prompt('Item\'s name? You can add multiple items by separating with commas')
 		if (!prompt){return}
-		this.data[cat].listData.push({item:prompt, priority:0})
+		var prompt = prompt.split(',')
+		_.each(prompt, function(a){
+			master.data[cat].listData.push({item:a, priority:0, done:false})
+		})
 		this.sortData();
+		this.submitData();
 	};
 	this.importData = function(){
 		try{
@@ -71,11 +75,17 @@ var DataManager = function(){
 	this.itemList = function(cat, newList){
 		this.data[cat].listData = newList;
 		this.submitData();
-	}
+	};
 	this.achieved = function(cat, id){
-		console.log(cat)
-		console.log(this.data[cat].listData[id])
-		!this.data[cat].listData[id].done == true ;
+		this.data[cat].listData[id].done = !this.data[cat].listData[id].done || false ;
+		this.submitData();
+	};
+	this.resetCategory = function(cat){
+		conf = window.confirm('Sure ?');
+		if (!conf) {return}
+		_.each(this.data[cat].listData, function(a, index){
+			a.done = false;
+		})
 		this.submitData();
 	}
 }
@@ -103,6 +113,7 @@ var renderList = function(i){
 	dataMaster.initialize();
 	var data = dataMaster.getData(i).listData;
 	$('.list').append(listMakerItems(data));
+	$('.ui-title').html(dataMaster.getData(i).listName)
 	itemEvents(dataMaster, i);
 
 	var whenReordered = function(e) {
@@ -111,27 +122,18 @@ var renderList = function(i){
 		renderList(i);
 	};
 
-	var whenDeleted = function(e) {
-		//dataMaster.removeItem(i, )
-	}
-
 	var list = document.querySelector('ul');
 	new Slip(list);
 
 	list.addEventListener('slip:reorder', whenReordered, false);
-	/*list.addEventListener('slip:swipe', function(e) {
-		e.target.parentNode.removeChild(e.target);
-		dataMaster.itemList(i, rewriteItemList())
-
-	});*/
 }
 
 // VIEWS' HELPERS
 	// ITEMS
 
 var rewriteItemList = function(){
-	return _.map($('ul > li > a'), function(a, i){
-		return {item:a.firstChild.data, priority:i}
+	return _.map($('ul > li > .item'), function(a, i){
+		return {item:a.firstChild.data, priority:i, done:false}
 	})
 }
 
@@ -148,21 +150,19 @@ var listMakerItems = function(data){
 			return Math.floor(((itemPriority - priority(data, _.min)) / range) * 100) || 0
 		}
 	}
-	return _.map(data, function(a,i) {
+	var result = _.map(data, function(a,i) {
 		var coloration = !a.done ? 'rgb(0, 0, ' + colorFunction(data)(a.priority) + ')' : 'rgb(0, 128, 0)';
-		console.log(a)
 		return '<li id="' + i + '" class="ui-first-child ui-last-child">\
 					<div class="behind">\
 						<a id="' + i + '" class="ui-btn delete-btn pull-left">Delete</a>\
 						<a href="#" id="' + i + '" class="ui-btn priority new-btn edit-btn pull-right">Priority</a>\
 					</div>\
-					<a id="' + i + '" style="background-color:' + coloration + '" href="#sessio" data-role="button" data-transition="slide" class="ui-btn ui-icon-carat-r ui-btn-icon-right">' + a.item +'\
+					<a id="' + i + '" style="background-color:' + coloration + '" href="#sessio" data-role="button" data-transition="slide" class="item ui-btn ui-btn-icon-left ' + (a.done ? 'ui-icon-check' : '') + '">' + a.item +'\
 					</a>\
-					<div>\
-						\
-					</div>\
-				</li>';
+				</li>'
 	})
+
+	return result
 };
 
 var itemEvents = function(dataMaster, categoryID){
@@ -188,7 +188,11 @@ var itemEvents = function(dataMaster, categoryID){
 		renderList(categoryID);
 	})
 	$('.btn-back').on('click', function(){renderCategories()});
-	$('.ui-listview li > a')
+	$('.btn-reset').on('click', function(){
+		dataMaster.resetCategory(categoryID)
+		renderList(categoryID)
+	});
+	$('.ui-listview li > .item')
 	.on('click', function(e){
 		dataMaster.achieved(categoryID, e.toElement.id)
 		renderList(categoryID)
@@ -217,6 +221,7 @@ var itemEvents = function(dataMaster, categoryID){
 		}
 		$(e.currentTarget).animate({left: new_left}, 200)
 	});
+	$('.btn-reset').css('display','block')
 }
 
 // CATEGORIES
@@ -225,11 +230,11 @@ var listMakerCategories = function(data){
 	return _.map(data, function(a,i) {
 		return '<li class="ui-first-child ui-last-child">\
 					<div class="behind">\
-						<a id="' + i + '" href="#" class="ui-btn new-btn edit-btn pull-left">Edit</a>\
-						<a id="' + i + '" href="#" class="ui-btn delete-btn">Delete</a>\
+						<a id="' + i + '" href="#" class="ui-btn delete-btn pull-left">Delete</a>\
 					</div>\
 					<a data-role="button" data-transition="slide" id="' + i + '" class="btn-category ui-btn ui-icon-carat-r ui-btn-icon-right">' + a.listName +'</a>\
-				</li>';
+				</li>\
+				';
 	})
 };
 
@@ -251,7 +256,33 @@ var categoryEvents = function(dataMaster) {
 		dataMaster.editCategory(e.toElement.id);
 		renderCategories();
 	})
-	
+
+	$('.ui-listview li > a')
+	.on('touchstart', function(e) {
+		$('.ui-listview li > a.open').css('left', '0px').removeClass('open') // close em all
+		$(e.currentTarget).addClass('open')
+		x = e.originalEvent.targetTouches[0].pageX // anchor point
+	})
+	.on('touchmove', function(e) {
+		var change = e.originalEvent.targetTouches[0].pageX - x
+		change = Math.min(Math.max(0, change), 170) *1.5
+		if (Math.abs(change) > 50) {
+			e.currentTarget.style.left = -(change > 0 ? 1 : -1) * 50 + change + 'px'
+		}
+	})
+	.on('touchend', function(e) {
+		var left = parseInt(e.currentTarget.style.left)
+		var new_left;
+		if (left < -35) {
+			new_left = '-110px'
+		} else if (left > 35) {
+			new_left = '110px'
+		} else {
+			new_left = '0px'
+		}
+		$(e.currentTarget).animate({left: new_left}, 200)
+	})
+	$('.btn-reset').css('display','none')
 }
 
 /*
@@ -354,10 +385,4 @@ var app = {
 	}
 };
 
-
-
-
 app.initialize();
-
-
-	//eventMaker();

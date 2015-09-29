@@ -26,7 +26,7 @@
 
     </head>
     <body style='color:black'>
-        <div class="app">
+        <div class="app" style="width:100%;margin:0px;height:80%">
             <div id="deviceready" class="blink">
                 <p class="event listening">Connecting to Device</p>
                 <p class="event received">Device is Ready</p>
@@ -41,7 +41,11 @@
                 </div>
             <div style='left-margin:20px' class='result' id='result'>
                 <ul class="list ui-listview" id="listView" data-role="listview" data-type="horizontal">
-
+                </ul>
+                <ul class="reset-command" id="command-reset" data-role="listview" data-type="horizontal">
+                <li class="ui-last-child">
+                    <a style="text-align:center; display:none; background-color:rgb(55,0,0)" class="ui-btn btn-reset">Reset</a>
+                </li>
                 </ul>
             </div>
             </div>
