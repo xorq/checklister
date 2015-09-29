@@ -126,6 +126,7 @@ var renderList = function(i){
 	new Slip(list);
 
 	list.addEventListener('slip:reorder', whenReordered, false);
+	list.addEventListener('slip:beforeswipe', function(e) {e.preventDefault();})
 }
 
 // VIEWS' HELPERS
@@ -205,8 +206,8 @@ var itemEvents = function(dataMaster, categoryID){
 	.on('touchmove', function(e) {
 		var change = e.originalEvent.targetTouches[0].pageX - x
 		change = Math.min(Math.max(0, change), 170) *1.5
-		if (Math.abs(change) > 50) {
-			e.currentTarget.style.left = -(change > 0 ? 1 : -1) * 50 + change + 'px'
+		if (Math.abs(change) > 100) {
+			e.currentTarget.style.left = -(change > 0 ? 1 : -1) * 100 + change + 'px'
 		}
 	})
 	.on('touchend', function(e) {
