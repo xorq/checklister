@@ -283,6 +283,7 @@ var categoryEvents = function(dataMaster) {
 		$(e.currentTarget).animate({left: new_left}, 200)
 	})
 	$('.btn-reset').css('display','none')
+	$('.ui-title').html('checklister')
 }
 
 /*
